@@ -1,0 +1,87 @@
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/lainproliant/proj/bakery/bakery.py", line 276, in main
+    exec(bake_instructions, globals())
+  File "<string>", line 2, in <module>
+  File "<string>", line 8, in Bakefile
+  File "/home/lainproliant/proj/bakery/bakery.py", line 164, in recipe
+    temps = set(generate(temp))
+TypeError: unhashable type: 'list'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/logging/__init__.py", line 992, in emit
+    msg = self.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 838, in format
+    return fmt.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 578, in format
+    s = self.formatMessage(record)
+  File "/home/lainproliant/proj/ansilog/ansilog.py", line 207, in formatMessage
+    return self.get_file_format(record).to_file().format(**record.__dict__)
+AttributeError: 'str' object has no attribute 'to_file'
+Call stack:
+  File "/bin/bake", line 11, in <module>
+    load_entry_point('bakery', 'console_scripts', 'bake')()
+  File "/home/lainproliant/proj/bakery/bakery.py", line 279, in main
+    log.critical("An exception occurred in the build harness.")
+Message: 'An exception occurred in the build harness.'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/lainproliant/proj/bakery/bakery.py", line 276, in main
+    exec(bake_instructions, globals())
+  File "<string>", line 2, in <module>
+  File "<string>", line 8, in Bakefile
+  File "/home/lainproliant/proj/bakery/bakery.py", line 164, in recipe
+    temps = set(generate(temp))
+TypeError: unhashable type: 'list'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/logging/__init__.py", line 992, in emit
+    msg = self.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 838, in format
+    return fmt.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 578, in format
+    s = self.formatMessage(record)
+  File "/home/lainproliant/proj/ansilog/ansilog.py", line 207, in formatMessage
+    return self.get_file_format(record).to_file().format(**record.__dict__)
+AttributeError: 'str' object has no attribute 'to_file'
+Call stack:
+  File "/bin/bake", line 11, in <module>
+    load_entry_point('bakery', 'console_scripts', 'bake')()
+  File "/home/lainproliant/proj/bakery/bakery.py", line 280, in main
+    log.exception("Exception details follow.")
+Message: 'Exception details follow.'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "/home/lainproliant/proj/bakery/bakery.py", line 276, in main
+    exec(bake_instructions, globals())
+  File "<string>", line 2, in <module>
+  File "<string>", line 8, in Bakefile
+  File "/home/lainproliant/proj/bakery/bakery.py", line 164, in recipe
+    temps = set(generate(temp))
+TypeError: unhashable type: 'list'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/logging/__init__.py", line 992, in emit
+    msg = self.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 838, in format
+    return fmt.format(record)
+  File "/usr/lib/python3.6/logging/__init__.py", line 578, in format
+    s = self.formatMessage(record)
+  File "/home/lainproliant/proj/ansilog/ansilog.py", line 207, in formatMessage
+    return self.get_file_format(record).to_file().format(**record.__dict__)
+AttributeError: 'str' object has no attribute 'to_file'
+Call stack:
+  File "/bin/bake", line 11, in <module>
+    load_entry_point('bakery', 'console_scripts', 'bake')()
+  File "/home/lainproliant/proj/bakery/bakery.py", line 281, in main
+    log.info(bg.red(fg.bright.white("BUILD CANCELLED")))
+Message: <ansilog.Tag object at 0x7fcdf232ee48>
+Arguments: ()

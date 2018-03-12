@@ -1,0 +1,35 @@
+# Handling async evaluation of coroutine resources
+- Let `injector` be the injector containing all modules for the build.
+- Let `targets[]` be the list of target resources for the build.
+- Let `eval_deck[]` be an ordered deck, each card containing a set of names of resources that can be evaluated before the next set of resources that depend on items in that and/or previous levels, calculated from and containing the dependencies required for `targets[]`.
+- For each card `card` in eval deck `eval_deck`:
+  - Let `coro_map{N:C}` be a map from resource names to coroutines.
+  - Let `coro_value_list_map{N:V[]}` be a map from resource names to value lists containing coroutines.
+  - For each resource name `target` in card `card`:
+    - Let `resource` be the resource named `target` required from `injector`.
+    - If `resource` is a coroutine:
+      - Map `target` to `resource` in `coro_map`.
+    - Else if `resource` is a list:
+      - Map `target` to `resource` in `coro_value_list_map`.
+  - Let `coro_lambdas[(Co,l)]` be a list of tuples of coroutines and lambdas to dispatch their results.
+  - For each resource name `target` and coroutine `coro` in `coro_map`:
+    - Let `l` be a lambda which dispatches the result `v` of `coro` as follows:
+      - Provide `v` as a singleton resource named `target` in `injector`, overwriting the existing coroutine resource in `injector`.
+    - Add the tuple of `(Co, l)` to `coro_lambdas`.
+  - Let `coro_value_list_target_set{N}` be a set of resource names.
+  - For each resource name `target` and value list `resource[]` in `coro_value_list_map`:
+    - Let `coro_indexes[(Co,Idx)]` be a list of tuples of coroutines and indexes thereof scanned from `resource`.
+    - If `coro_indexes[]` is not empty:
+      - Add `target` to `coro_value_list_target_set`.
+      - For coroutine `coro` and index `x` in `coro_indexes`:
+        - Let `l` be a lambda which dispatches the result `v` of `coro` as follows:
+          - Write `v` to `resource` at `x`.
+        - Add the tuple of `(Co, l)` to `coro_lambdas`.
+  - Let `dispatch_lambdas[(V,l)]` be a list of tuples of values and lambdas to dispatch them.
+  - In an asyncio event loop, gather into `dispatch_lambdas` the results of each `coro` and `l` for each tuple in `coro_lambdas`.
+  - For each value `v` and lambda `l` in `dispatch_lambdas`:
+    - Dispatch `v` using `l`.
+  - For each resource name `target` in `coro_value_list_target_set`:
+    - Let `resource[]` be the list of partially overwritten values for resource name `target` in `coro_map`.
+    - Offer `resource` as a singleton resource named `target` in `injector`, overwriting the existing list resource in `injector`.
+
