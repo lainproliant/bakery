@@ -1,5 +1,3 @@
-import glob
-
 @recipe(check='src', temp='obj')
 async def compile(src, obj, log: 'log'):
     await shell('cc', '-c', src, '-o', obj, log = log)
@@ -16,11 +14,11 @@ class Bakefile:
     def sources(self):
         return File.glob('src/*.c') 
    
-    @provide
-    def objects(self, sources):
-        return [compile(x, x + '.o') for x in sources]
+    @target
+    async def objects(self, sources):
+        return await asyncio.gather(*[compile(x, File.ext(x, 'o')) for x in sources])
 
     @default
-    def executable(self, objects):
-        return link(objects, 'executable')
+    async def executable(self, objects):
+        return await link(objects, 'executable')
 

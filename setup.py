@@ -21,16 +21,17 @@ setup(
         'Intended Audience :: All',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'
     ],
 
     keywords='build make dependency',
-    py_modules=['xeno'],
+    packages=find_packages(exclude=['bakery']),
     install_requires=['xeno', 'ansilog'],
 
     entry_points={
         'console_scripts': [
-            'bake=bakery:main'
+            'bake=bakery.core:main'
         ],
     }
 )
