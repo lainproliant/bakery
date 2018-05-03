@@ -8,7 +8,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='bakery',
+    name='bakery-build',
     version='0.2',
     description='A dependency-driven build manager based on xeno.',
     long_description=long_description,
@@ -18,7 +18,7 @@ setup(
     license='BSD',
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Intended Audience :: All',
+        'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3.5',
