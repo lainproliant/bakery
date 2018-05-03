@@ -1,10 +1,10 @@
 # Bakery: A Python build system straight out of the oven
 
 Bakery is a dependency driven build system atop the
-[Xeno](https://github.com/lainproliant/xeno) injection framework.
-Bakery allows you to define the structure and flow of your build process using
-plain Python code.  Bakery mixes the ease of use of Makefiles with the power and
-expressiveness of the Python language.
+[Xeno](https://github.com/lainproliant/xeno) injection framework.  Bakery
+allows you to define the structure and flow of your build process using plain
+Python code.  Bakery mixes the expressiveness of Makefiles with the power and
+utility of the Python programming language.
 
 ### Note
 Bakery is still in early development.  There may be some rough edges or major
@@ -40,49 +40,65 @@ project.
 
 Via Xeno, dependencies are declared via the parameters provided to each target
 method.  Each target, input, output, and temporary resource may be defined as a
-coroutine or return an coroutine or list of coroutines.  When coroutines are
-used this way, bakery will schedule them in the current event loop.  Using
-`asyncio` and the built-in `shell` coroutine, it becomes easy to define a build
-workflow that can be run in parallel.
+normal function or a coroutine.  When coroutines are used this way, bakery will
+schedule them in the current event loop.  Using `asyncio` and the built-in
+`shell` coroutine, it becomes easy to define a build workflow that can run
+multiple concurrent tasks, such as compiling source files, in parallel.
 
 ## Example
 
-This simple example defines a `Bakefile.py` for a simple C project containing 
+This simple example defines a `Bakefile.py` for a simple C project containing
 number of source files which are linked into a resulting executable.
 
 ```
+import bakery.recipes.cxx as CXX
+import bakery.recipes.file as File
+import os
+
+CXX.CXX = 'clang++'
+CXX.CFLAGS = [
+    '-g',
+    '-rdynamic',
+    '--std=c++14',
+    '-DLAIN_ENABLE_STACKTRACE',
+    '-DLAIN_STACKTRACE_IN_DESCRIPTION',
+    '-I./toolbox/include',
+    '-I./include'
+]
+CXX.LDFLAGS = ['-lSDL2', '-lSDL2_image']
+
 @build
-class Bakefile:
-    @recipe(check='src', temp='obj')
-    async def compile(self, src, obj, log: 'log'):
-        await shell('cc', '-c', src, '-o', obj, log = log)
-        return obj
-
-    @recipe('executable', check='objects')
-    async def link(self, objects, executable, log: 'log'):
-        await shell('cc', objects, '-o', executable, log = log)
-        return executable
-
-    @recipe()
-    async def warn(self, log: 'log'):
-        log.warning('OH NOES')
-
+class LostLevels:
     @provide
-    def warning(self, log: 'bakery/log'):
-        log.warning('OH NOES')
-        return self.warn()
-
+    def demo_sources(self):
+        return File.glob('demo/*.cpp')
+    
     @provide
-    def sources(self):
-        return File.glob('src/*.c') 
-   
-    @provide
-    def objects(self, sources):
-        return [self.compile(x, File.ext(x, 'o')) for x in sources]
+    def build_dir(self):
+        return File.directory('build')
 
+    @target
+    def demo_resources(self, build_dir, demo_sources):
+        resource_paths = []
+        for source in demo_sources:
+            resource_dir = File.basename(File.drop_ext(source)) + '-rc'
+            resource_paths.append(File.copy(
+                File.join('demo', resource_dir),
+                File.join(build_dir, resource_dir)))
+        return resource_paths
+    
+    @provide
+    def demo_objects(self, build_dir, demo_resources, demo_sources):
+        objects = []
+        for source in demo_sources:
+            object_file = File.join(build_dir, File.basename(File.swap_ext(source, 'o')))
+            objects.append(CXX.compile(source, object_file))
+        return objects
+    
     @default
-    def executable(self, objects):
-        return self.link(objects, 'executable')
+    def demos(self, demo_objects):
+        return [CXX.link(obj, File.drop_ext(obj)) for obj in demo_objects]
+
 ```
 
 In the above example, the following Bakery patterns are used:
@@ -90,6 +106,19 @@ In the above example, the following Bakery patterns are used:
 - `@build` wraps the module so that it is evaluated by Bakery as a build module.
     More than one module may be decorated with `@build`, but no more than one
     target may be marked as `@default` among them.
+
+- `@provide` is an annotation from
+    [Xeno](https://github.com/lainproliant/python3-xeno), marking the given
+    method as a named resource that can be injected into other resources (and
+    build targets) via their parameter name.
+
+- `@target` is a Bakery annotation that marks a method as providing a target that
+    can be specified with the `bake` command.
+
+- `@default` marks the method as a valid nameable target and the default target
+    to be executed when no other targets are specified with the `bake` command.
+
+A few other useful Bakery patterns and tools to consider in your projects:
 
 - `@recipe` marks a given function as defining a recipe for creating files.
     The modification time of the input files is compared to the output if it
@@ -107,24 +136,21 @@ In the above example, the following Bakery patterns are used:
    Additionally, the decorated function may define annotated variables into which
    special values are injected as follows:
     - `log`: This parameter is provided with a logger specific to the recipe run.
+   Note that recipes can be defined inside or outside of your build module, this
+   choice is up to you.
 
-- `shell`: This is a coroutine wrapper to `asyncio.create_subprocess_exec` which 
+- `shell`: This is a coroutine wrapper to `asyncio.create_subprocess_exec` which
     captures and returns the output from the command as well as printing its
     output and error output to the bakery logger.  Prefer this function for
     executing other programs such as compilers, unless the program requires a tty.
-
-- `@provide` is an annotation from
-    [Xeno](https://github.com/lainproliant/python3-xeno), marking the given
-    method as a named resource that can be injected into other resources (and
-    build targets) via their parameter names.  Any Xeno resource is a 
-    
-
-- `@default` marks the method as a valid nameable target and the default target
-    to be executed when no other targets are specified.
 
 ### Note
 To make the most out of Bakery, you should first read up on
 [Xeno](https://github.com/lainproliant/python3-xeno).  *Build modules* in Bakery
 are Xeno modules as well, allowing you to require and use resources defined in
 other Xeno modules, such as the runtime parts of your Xeno-based project.
+
+## Change Log
+### Bakery v0.2 - May 3 2018
+- First stable working version.
 

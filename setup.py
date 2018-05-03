@@ -9,10 +9,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='bakery',
-    version='0.1',
+    version='0.2',
     description='A dependency-driven build manager based on xeno.',
     long_description=long_description,
-    url='https://github.com/lainproliant/python3-bakery',
+    url='https://github.com/lainproliant/bakery',
     author='Lain Supe (lainproliant)',
     author_email='lainproliant@gmail.com',
     license='BSD',
@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'bake=bakery.core:main'
+            'bake=bakery.bake:main'
         ],
     }
 )

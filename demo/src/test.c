@@ -1,6 +1,9 @@
 #include <stdio.h>
 
-int main(int argc, char** argv[]) {
+void hello();
+
+int main(int argc, char* argv[]) {
    printf("Hello, world!  I love you!\n");
+   hello();
    return 0;
 }
