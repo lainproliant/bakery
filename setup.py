@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='bakery-build',
-    version='0.2',
+    version='0.2.1',
     description='A dependency-driven build manager based on xeno.',
     long_description=long_description,
     url='https://github.com/lainproliant/bakery',
@@ -26,7 +26,7 @@ setup(
     ],
 
     keywords='build make dependency',
-    packages=find_packages(exclude=['bakery']),
+    packages=find_packages(),
     install_requires=['xeno', 'ansilog'],
 
     entry_points={
