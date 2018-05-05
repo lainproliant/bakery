@@ -4,6 +4,7 @@ import traceback
 import xeno
 
 from ..utils import *
+from ..exceptions import *
 
 #--------------------------------------------------------------------
 class Recipes:

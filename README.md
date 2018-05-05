@@ -151,6 +151,12 @@ are Xeno modules as well, allowing you to require and use resources defined in
 other Xeno modules, such as the runtime parts of your Xeno-based project.
 
 ## Change Log
-### Bakery v0.2 - May 3 2018
+### Bakery v0.3.0 - May 4 2018
+- Added `@noclean` decorator for resources which should not be cleaned when
+    `bake -c` is run.
+- Fixed bug which prevented usage of namespaced or aliased resources.
+- Due to the above bug fix, Bakery now depends on `xeno>=3.0.0`.
+
+### Bakery v0.2.0 - May 3 2018
 - First stable working version.
 

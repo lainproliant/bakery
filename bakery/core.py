@@ -37,6 +37,15 @@ class Build:
             return result
         return wrapper
 
+    def noclean(self, f):
+        @xeno.MethodAttributes.wraps(f)
+        async def wrapper(*args, **kwargs):
+            if self.cleaning():
+                return None
+            else:
+                return await xeno.async_wrap(f, *args, **kwargs)
+        return wrapper
+
     @xeno.provide
     @xeno.singleton
     def log(self):
@@ -74,6 +83,7 @@ class Build:
         setup_methods = self._find_setup_methods()
         for setup_method_name in setup_methods:
             self.injector.require(setup_method_name)
+
         result_map = {target: self.injector.require(target) for target in targets}
         result_map = {target: loop.run_until_complete(self._resolve_resource(target)) for target, value in result_map.items()}
         loop.run_until_complete(self._prepare_temp_targets_for_cleanup())
@@ -87,7 +97,8 @@ class Build:
         Recipes().cleanup()
         return result_map
 
-    async def _resolve_resource(self, name, value = xeno.NOTHING):
+    async def _resolve_resource(self, name, value = xeno.NOTHING, alias = None):
+        name = alias or name
         attr = self.injector.get_resource_attributes(name)
         if name in self.coro_results and attr.check('singleton'):
             return self.coro_results[name]
@@ -112,8 +123,8 @@ class Build:
 
         return value
 
-    async def _intercept_coroutines(self, attrs, dependency_map):
-        return {k: await self._resolve_resource(k, value=v) for k, v in dependency_map.items()}
+    async def _intercept_coroutines(self, attrs, param_map, alias_map):
+        return {k: await self._resolve_resource(k, value=v, alias=alias_map[k]) for k, v in param_map.items()}
 
     def __call__(self, *modules):
         self.build(*modules)
@@ -151,6 +162,7 @@ __all__ = [
    'inject',
    'named',
    'namespace',
+   'noclean',
    'provide',
    'recipe',
    'setup',
@@ -170,6 +182,7 @@ inject = xeno.inject
 method_attr = xeno.MethodAttributes.add
 named = xeno.named
 namespace = xeno.namespace
+noclean = build.noclean
 provide = xeno.provide
 recipe = Recipes().recipe
 singleton = xeno.singleton

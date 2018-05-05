@@ -1,4 +1,6 @@
 from ..core import recipe, shell
+from ..utils import is_iterable
+import .file as File
 
 #--------------------------------------------------------------------
 CC = 'cc'

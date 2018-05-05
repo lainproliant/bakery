@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from .utils import *
-from .exceptions import SubprocessError
+from .exceptions import *
 
 #--------------------------------------------------------------------
 class Shell:
@@ -11,7 +11,7 @@ class Shell:
     def __init__(self, config = None):
         self.log = get_logger("bakery.shell.Shell")
         self.env = {}
-
+    
     def derive(self):
         derived_shell = Shell()
         derived_Shell.env.update(self.env)
@@ -24,7 +24,7 @@ class Shell:
         
         try:
             if name is None:
-                name = 'sh'
+                name = '#'
             if log is None:
                 log = JobLog(self.log, name = name)
                 
