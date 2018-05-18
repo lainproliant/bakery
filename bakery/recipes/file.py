@@ -30,6 +30,16 @@ def directory(path, log: 'log'):
     return path
 
 #--------------------------------------------------------------------
+@recipe(temp='path')
+def temp_directory(path, log: 'log'):
+    if not exists(path):
+        log.trace('Making directory: %s' % path)
+        os.makedirs(path)
+    if not isdir(path):
+        raise BuildError('File exists but is not a directory: %s' % path)
+    return path
+
+#--------------------------------------------------------------------
 @recipe('file')
 def download(url, file):
     urllib.request.urlretrieve(url, file)

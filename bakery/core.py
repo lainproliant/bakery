@@ -61,40 +61,42 @@ class Build:
         return asyncio.get_event_loop()
 
     def build(self, *module_classes, targets = []):
-        loop = asyncio.get_event_loop()
-        Build.build_count += 1
-        modules = [module_class() for module_class in module_classes]
-        self.injector = xeno.Injector(self, *modules)
-        self.injector.add_async_injection_interceptor(self._intercept_coroutines)
+        try:
+            loop = asyncio.get_event_loop()
+            Build.build_count += 1
+            modules = [module_class() for module_class in module_classes]
+            self.injector = xeno.Injector(self, *modules)
+            self.injector.add_async_injection_interceptor(self._intercept_coroutines)
 
-        if build.interactive and not targets:
-            targets = self.targets
-        if not targets:
-            default_target = self._find_default_target()
-            if not default_target:
-                raise BuildError('No target was specified and no default target was defined.')
-            targets = [default_target]
+            if build.interactive and not targets:
+                targets = self.targets
+            if not targets:
+                default_target = self._find_default_target()
+                if not default_target:
+                    raise BuildError('No target was specified and no default target was defined.')
+                targets = [default_target]
 
-        valid_targets = set(self._find_targets())
-        for target in targets:
-            if not target in valid_targets:
-                raise BuildError('Unknown target: %s' % target)
+            valid_targets = set(self._find_targets())
+            for target in targets:
+                if not target in valid_targets:
+                    raise BuildError('Unknown target: %s' % target)
 
-        setup_methods = self._find_setup_methods()
-        for setup_method_name in setup_methods:
-            self.injector.require(setup_method_name)
+            setup_methods = self._find_setup_methods()
+            for setup_method_name in setup_methods:
+                self.injector.require(setup_method_name)
 
-        result_map = {target: self.injector.require(target) for target in targets}
-        result_map = {target: loop.run_until_complete(self._resolve_resource(target)) for target, value in result_map.items()}
-        loop.run_until_complete(self._prepare_temp_targets_for_cleanup())
+            result_map = {target: self.injector.require(target) for target in targets}
+            result_map = {target: loop.run_until_complete(self._resolve_resource(target)) for target, value in result_map.items()}
+            loop.run_until_complete(self._prepare_temp_targets_for_cleanup())
 
-        # If we are cleaning, we need to resolve all targets in the dependency chain
-        if self.cleaning():
-            for dep in self.injector.get_dependency_graph(*targets):
-                if dep in valid_targets:
-                    loop.run_until_complete(self._resolve_resource(dep))
+            # If we are cleaning, we need to resolve all targets in the dependency chain
+            if self.cleaning():
+                for dep in self.injector.get_dependency_graph(*targets):
+                    if dep in valid_targets:
+                        loop.run_until_complete(self._resolve_resource(dep))
+        finally:
+            Recipes().cleanup()
 
-        Recipes().cleanup()
         return result_map
 
     async def _resolve_resource(self, name, value = xeno.NOTHING, alias = None):
