@@ -80,7 +80,6 @@ class Recipes:
             
                 def clean():
                     if outputs_exist():
-                        log.trace('Cleaning...')
                         for file in output_files:
                             remove(file, log = log)
                     return coalesce_default_outputs()
