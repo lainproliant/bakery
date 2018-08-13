@@ -1,10 +1,10 @@
-#--------------------------------------------------------------------
+# --------------------------------------------------------------------
 # bakery: Dependency-based build system built atop a Xeno injector.
 #
-# Author: Lain Supe (supelee)
+# Author: Lain Supe (lainproliant)
 # Date: Thursday March 23 2017,
 #       Tuesday January 23 2018
-#--------------------------------------------------------------------
+# --------------------------------------------------------------------
 import asyncio
 import xeno
 
@@ -13,8 +13,8 @@ from .exceptions import *
 from .shell import Shell
 from .recipes.core import Recipes
 
-#--------------------------------------------------------------------
-@xeno.namespace('bakery')
+# --------------------------------------------------------------------
+@xeno.namespace("bakery")
 class Build:
     build_count = 0
 
@@ -33,8 +33,9 @@ class Build:
         async def wrapper(*args, **kwargs):
             attrs = xeno.MethodAttributes.for_method(wrapper)
             result = await xeno.async_wrap(f, *args, **kwargs)
-            self.built_temp_resources.append(attrs.get('resource-name'))
+            self.built_temp_resources.append(attrs.get("resource-name"))
             return result
+
         return wrapper
 
     def noclean(self, f):
@@ -44,6 +45,7 @@ class Build:
                 return None
             else:
                 return await xeno.async_wrap(f, *args, **kwargs)
+
         return wrapper
 
     @xeno.provide
@@ -60,7 +62,7 @@ class Build:
     def loop(self):
         return asyncio.get_event_loop()
 
-    def build(self, *module_classes, targets = []):
+    def build(self, *module_classes, targets=[]):
         try:
             loop = asyncio.get_event_loop()
             Build.build_count += 1
@@ -73,20 +75,25 @@ class Build:
             if not targets:
                 default_target = self._find_default_target()
                 if not default_target:
-                    raise BuildError('No target was specified and no default target was defined.')
+                    raise BuildError(
+                        "No target was specified and no default target was defined."
+                    )
                 targets = [default_target]
 
             valid_targets = set(self._find_targets())
             for target in targets:
                 if not target in valid_targets:
-                    raise BuildError('Unknown target: %s' % target)
+                    raise BuildError("Unknown target: %s" % target)
 
             setup_methods = self._find_setup_methods()
             for setup_method_name in setup_methods:
                 self.injector.require(setup_method_name)
 
             result_map = {target: self.injector.require(target) for target in targets}
-            result_map = {target: loop.run_until_complete(self._resolve_resource(target)) for target, value in result_map.items()}
+            result_map = {
+                target: loop.run_until_complete(self._resolve_resource(target))
+                for target, value in result_map.items()
+            }
             loop.run_until_complete(self._prepare_temp_targets_for_cleanup())
 
             # If we are cleaning, we need to resolve all targets in the dependency chain
@@ -99,26 +106,34 @@ class Build:
 
         return result_map
 
-    async def _resolve_resource(self, name, value = xeno.NOTHING, alias = None):
+    async def _resolve_resource(self, name, value=xeno.NOTHING, alias=None):
         name = alias or name
         attr = self.injector.get_resource_attributes(name)
-        if name in self.coro_results and attr.check('singleton'):
+        if name in self.coro_results and attr.check("singleton"):
             return self.coro_results[name]
         else:
-            value = await self.injector.require_async(name) if value is xeno.NOTHING else value
+            value = (
+                await self.injector.require_async(name)
+                if value is xeno.NOTHING
+                else value
+            )
 
         if asyncio.iscoroutine(value):
             value = await value
-            if attr.check('singleton'):
+            if attr.check("singleton"):
                 self.coro_results[name] = value
                 return self.coro_results[name]
 
         elif is_iterable(value) and name not in self.scanned_iterables:
             self.scanned_iterables.add(name)
-            coro_offsets = filter(lambda cv: asyncio.iscoroutine(cv[1]), enumerate(value))
+            coro_offsets = filter(
+                lambda cv: asyncio.iscoroutine(cv[1]), enumerate(value)
+            )
             if coro_offsets:
                 value = value[:]
-                coro_values = await asyncio.gather(*[xeno.async_map(*cv) for cv in coro_offsets])
+                coro_values = await asyncio.gather(
+                    *[xeno.async_map(*cv) for cv in coro_offsets]
+                )
                 for x, v in coro_values:
                     value[x] = v
                 self.coro_results[name] = value
@@ -126,7 +141,10 @@ class Build:
         return value
 
     async def _intercept_coroutines(self, attrs, param_map, alias_map):
-        return {k: await self._resolve_resource(k, value=v, alias=alias_map[k]) for k, v in param_map.items()}
+        return {
+            k: await self._resolve_resource(k, value=v, alias=alias_map[k])
+            for k, v in param_map.items()
+        }
 
     def __call__(self, *modules):
         self.build(*modules)
@@ -141,41 +159,56 @@ class Build:
                 Recipes().temp_files.append(result)
 
     def _find_setup_methods(self):
-        return [r[0] for r in self.injector.scan_resources(lambda name, attr: attr.check('bakery-setup'))]
+        return [
+            r[0]
+            for r in self.injector.scan_resources(
+                lambda name, attr: attr.check("bakery-setup")
+            )
+        ]
 
     def _find_targets(self):
-        return [r[0] for r in self.injector.scan_resources(lambda name, attr: attr.check('bakery-target'))]
+        return [
+            r[0]
+            for r in self.injector.scan_resources(
+                lambda name, attr: attr.check("bakery-target")
+            )
+        ]
 
     def _find_default_target(self):
-        results = list(self.injector.scan_resources(lambda name, attr: attr.check('bakery-default')))
+        results = list(
+            self.injector.scan_resources(
+                lambda name, attr: attr.check("bakery-default")
+            )
+        )
         if not results:
             return None
         elif len(results) > 1:
-            raise TargetConflictError('Multiple default targets defined.', results)
+            raise TargetConflictError("Multiple default targets defined.", results)
         return results[0][0] if results else None
 
-#--------------------------------------------------------------------
+
+# --------------------------------------------------------------------
 __all__ = [
-   'alias',
-   'build',
-   'compose',
-   'const',
-   'default',
-   'inject',
-   'named',
-   'namespace',
-   'noclean',
-   'provide',
-   'recipe',
-   'setup',
-   'shell',
-   'singleton',
-   'target',
-   'temp',
-   'using'
+    "alias",
+    "build",
+    "compose",
+    "const",
+    "default",
+    "inject",
+    "named",
+    "namespace",
+    "noclean",
+    "provide",
+    "recipe",
+    "setup",
+    "shell",
+    "singleton",
+    "target",
+    "temp",
+    "using",
 ]
 
-#--------------------------------------------------------------------
+# --------------------------------------------------------------------
 alias = xeno.alias
 build = Build()
 const = xeno.const
@@ -188,10 +221,9 @@ noclean = build.noclean
 provide = xeno.provide
 recipe = Recipes().recipe
 singleton = xeno.singleton
-setup = compose(singleton, method_attr('bakery-setup'))
+setup = compose(singleton, method_attr("bakery-setup"))
 shell = Shell().__call__
-target = compose(asyncio.coroutine, singleton, method_attr('bakery-target'))
+target = compose(asyncio.coroutine, singleton, method_attr("bakery-target"))
 temp = compose(singleton, build.temp)
-default = compose(target, method_attr('bakery-default'))
+default = compose(target, method_attr("bakery-default"))
 using = xeno.using
-
