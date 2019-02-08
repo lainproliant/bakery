@@ -2,6 +2,7 @@ from ..core import recipe, shell
 
 #--------------------------------------------------------------------
 CC = 'cc'
+AR = 'ar'
 CFLAGS = []
 LDFLAGS = []
 
