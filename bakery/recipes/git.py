@@ -8,4 +8,4 @@ async def clone(url, repo):
 
 # --------------------------------------------------------------------
 async def submodule_update():
-    await shell('git', 'submodule', 'update', '--init' '--recursive')
+    await shell('git', 'submodule', 'update', '--init', '--recursive')
