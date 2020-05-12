@@ -1,3 +1,5 @@
+NOTE: Bakery is deprecated in favor of panifex: <https://github.com/lainproliant/panifex>
+
 # Bakery: A Python build system straight out of the oven
 
 Bakery is a dependency driven build system atop the
